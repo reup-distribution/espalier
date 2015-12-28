@@ -22,7 +22,7 @@ Espalier placeholders are similar to [`@extend`-only selectors in Sass](http://s
 ;; Extend placeholders in place
 
 (require '[espalier.core :refer [emit-placeholders]]
-		 '[garden.def :refer [defstyles]]
+         '[garden.def :refer [defstyles]]
          '[garden.stylesheet :refer [at-media]])
 
 (defstyles my-styles

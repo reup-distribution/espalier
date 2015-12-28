@@ -5,5 +5,5 @@
                  [garden "1.3.0"]
                  [org.flatland/ordered "1.5.3"]]
   :profiles {:dev {:dependencies [[speclj "3.3.1"]]
-  				   :plugins [[speclj "3.3.1"]]}}
+                   :plugins [[speclj "3.3.1"]]}}
   :aliases {"test" ["spec"]})
