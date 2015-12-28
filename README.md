@@ -2,9 +2,9 @@
 
 ![Espalier](./resources/espalier.png)
 
-Placeholder style rules for Garden, similar to [`@extend`-only selectors in Sass](http://sass-lang.com/documentation/file.SASS_REFERENCE.html#placeholders).
+Placeholder style rules for [Garden](https://github.com/noprompt/garden).
 
-Placeholders provide a mechanism to reuse styles with a much smaller file size footprint.
+Espalier placeholders are similar to [`@extend`-only selectors in Sass](http://sass-lang.com/documentation/file.SASS_REFERENCE.html#placeholders), providing a mechanism to reuse styles with a much smaller file size footprint.
 
 ### Usage
 
@@ -37,7 +37,7 @@ Placeholders provide a mechanism to reuse styles with a much smaller file size f
 
 ```
 
-Given the above, you'll get CSS output like:
+Given the above, Garden will produce CSS output like:
 
 ```css
 some-selector,
