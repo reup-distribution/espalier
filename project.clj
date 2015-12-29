@@ -1,4 +1,8 @@
 (defproject espalier "0.1.0-SNAPSHOT"
+  :license {:name "BSD 2-clause \"Simplified\" License"
+            :url "http://opensource.org/licenses/BSD-2-Clause"
+            :year 2015
+            :key "bsd-2-clause"}
   :description "Placeholder style rules for Garden"
   :url "https://github.com/reup-distribution/espalier"
   :dependencies [[org.clojure/clojure "1.7.0"]
