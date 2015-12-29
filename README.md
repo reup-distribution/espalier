@@ -65,7 +65,7 @@ something-else some-child.including {
 
 ### License
 
-Copyright (c) 2015, ReUp Distribution
+Copyright (c) 2015, ReUp Distribution Inc
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
