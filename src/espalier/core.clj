@@ -60,7 +60,10 @@
 (wrap-fn #'garden.compiler/expand-stylesheet #'expand-stylesheet-wrapper)
 
 (defn expand-selector-rules [selectors rules]
-  (expand (vec (concat (vec selectors) rules))))
+  (-> (vec selectors)
+      (concat rules)
+      vec
+      expand))
 
 (defn render-selectors [{:keys [selectors rules]}]
   (let [selectors* @selectors]
