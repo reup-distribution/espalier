@@ -89,6 +89,14 @@
        (remove nil?)
        (string/join "\n")))
 
+;; This is gross and hacky, but exists specifically to denote its
+;; side-effecting nature: because Placeholder's expand method is
+;; itself stateful, forcing an expansion of child rules here ensures
+;; that nested placeholders are expanded.
+(defn expand-nested-placeholders!
+  [rules]
+  (expand [:& rules]))
+
 (defrecord Placeholder [media-queries selectors rules]
   CSSRenderer
   (render-css [this]
@@ -97,11 +105,13 @@
          (string/join "\n")))
 
   IExpandable
+  ;; HERE BE DRAGONS: if there is a selector/media query context during
+  ;; Garden's rendering, we capture that context for rendering the final
+  ;; Placeholder. If there's no context, the expansion is returned.
   (expand [this]
     (if-let [selector-context @#'garden.compiler/*selector-context*]
       (let [selector (@#'garden.compiler/render-selector selector-context)]
-        ;; Ensure nested placeholder references are resolved
-        (expand [:& rules])
+        (expand-nested-placeholders! rules)
         (if-let [media-query @#'garden.compiler/*media-query-context*]
           (if-let [existing-query (@media-queries media-query)]
             (swap! media-queries update-in [media-query] conj selector)
