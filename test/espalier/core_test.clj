@@ -31,6 +31,10 @@
   bold
   italic)
 
+(defplaceholder affects-children
+  {:color :red}
+  [:.warning {:color :yellow}])
+
 (describe "Placeholder style rules"
   (it "includes supplied rules for each selector referencing the placeholder"
     (let [styles (list
@@ -90,4 +94,21 @@
                    [:p outer])]
       (should=
         "p{font-weight:bold}p{font-style:italic}"
+        (css flags styles))))
+
+  (it "resolves child selectors"
+    (let [styles (list
+                   (emit-placeholders)
+                   [:.notice affects-children])]
+      (should=
+        ".notice{color:red}.notice .warning{color:yellow}"
+        (css flags styles))))
+
+  (it "resolves child selectors in media queries"
+    (let [styles (list
+                   (emit-placeholders)
+                   (at-media {:screen :only}
+                     [:.notice affects-children]))]
+      (should=
+        "@media only screen{.notice{color:red}.notice .warning{color:yellow}}"
         (css flags styles)))))
