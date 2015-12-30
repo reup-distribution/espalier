@@ -74,24 +74,25 @@
              (remove nil?)
              (string/join "\n"))))))
 
-(defn render-at-media [{:keys [media-queries rules]}]
+(defn render-media-query [rules [media-query selectors]]
+  (when-not (empty? selectors)
+    (let [expanded (expand-selector-rules selectors rules)
+          at-rule (map->CSSAtRule
+                    {:identifier :media
+                     :value {:media-queries media-query
+                             :rules expanded}})]
+       (render-css at-rule))))
+
+(defn render-media-queries [{:keys [media-queries rules]}]
   (->> @media-queries
-       (map
-         (fn [[media-query selectors]]
-           (when-not (empty? selectors)
-             (let [expanded (expand-selector-rules selectors rules)
-                   at-rule (map->CSSAtRule
-                             {:identifier :media
-                              :value {:media-queries media-query
-                                      :rules expanded}})]
-                (render-css at-rule)))))
+       (map (partial render-media-query rules))
        (remove nil?)
        (string/join "\n")))
 
 (defrecord Placeholder [media-queries selectors rules]
   CSSRenderer
   (render-css [this]
-    (->> [(render-selectors this) (render-at-media this)]
+    (->> [(render-selectors this) (render-media-queries this)]
          (remove nil?)
          (string/join "\n")))
 
