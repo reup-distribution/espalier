@@ -1,4 +1,4 @@
-(defproject espalier "0.1.0-SNAPSHOT"
+(defproject espalier "0.1.1"
   :license {:name "BSD 2-clause \"Simplified\" License"
             :url "http://opensource.org/licenses/BSD-2-Clause"
             :year 2015

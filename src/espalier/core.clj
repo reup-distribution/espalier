@@ -23,7 +23,7 @@
             (apply @wrapper original args)))))))
 
 
-(def placeholders
+(defonce placeholders
   (atom (ordered-set)))
 
 (defn reset-placeholders! []
@@ -128,10 +128,11 @@
       (map #(map->Placeholder (assoc % :selectors empty-atom)) placeholders))))
 
 (defmacro defplaceholder [name & rules]
-  `(do
-     (swap! placeholders conj '~(symbol (str (ns-name *ns*)) (str name)))
-     (def ~(symbol name)
-       (map->Placeholder
-         {:media-queries (atom (ordered-map))
-          :selectors (atom (ordered-set))
-          :rules (list ~@rules)}))))
+  `(let [sym# '~(symbol (str (ns-name *ns*)) (str name))]
+     (when-not (contains? @placeholders sym#)
+       (swap! placeholders conj sym#)
+       (defonce ~(symbol name)
+         (map->Placeholder
+           {:media-queries (atom (ordered-map))
+            :selectors (atom (ordered-set))
+            :rules (list ~@rules)})))))
