@@ -23,18 +23,8 @@
             (apply @wrapper original args)))))))
 
 
-(def placeholders
+(defonce placeholders
   (atom (ordered-set)))
-
-(defn reset-placeholders! []
-  (doseq [sym @placeholders]
-    (if-let [placeholder @(resolve sym)]
-      (doseq [field [:media-queries :selectors]
-              :let [field-atom (field placeholder)]]
-        (swap! field-atom empty))
-      (swap! placeholders disj sym))))
-
-(reset-placeholders!)
 
 ;; Modify render-rule to prevent creation of nested blocks
 ;; when inside a placeholder's rendering
@@ -48,13 +38,17 @@
 
 (wrap-fn #'garden.compiler/render-rule #'render-rule-wrapper)
 
+(defn purge-removed-placeholders! []
+  (doseq [sym @placeholders]
+    (when-not @(resolve sym)
+      (swap! placeholders disj sym))))
+
 ;; Modify expand-stylesheet to:
-;; - reset contexts captured by placeholders in a previous render (this would
-;;   occur during `lein garden auto`)
+;; - purges removed placeholders (this would occur in `lein garden auto`)
 ;; - prevent laziness so that all selector contexts are extended before
 ;;   placeholders are rendered
 (defn expand-stylesheet-wrapper [expand-stylesheet xs]
-  (reset-placeholders!)
+  (purge-removed-placeholders!)
   (doall (expand-stylesheet xs)))
 
 (wrap-fn #'garden.compiler/expand-stylesheet #'expand-stylesheet-wrapper)
@@ -110,28 +104,31 @@
   ;; Placeholder. If there's no context, the expansion is returned.
   (expand [this]
     (if-let [selector-context @#'garden.compiler/*selector-context*]
-      (let [selector (@#'garden.compiler/render-selector selector-context)]
+      (let [selectors* (map @#'garden.compiler/space-separated-list selector-context)]
         (expand-nested-placeholders! rules)
         (if-let [media-query @#'garden.compiler/*media-query-context*]
           (if-let [existing-query (@media-queries media-query)]
-            (swap! media-queries update-in [media-query] conj selector)
-            (swap! media-queries assoc media-query (ordered-set selector)))
-          (swap! selectors conj selector))
+            (swap! media-queries update-in [media-query] into selectors*)
+            (swap! media-queries assoc media-query (into (ordered-set) selectors*)))
+          (swap! selectors into selectors*))
         nil)
       (list [(list '(::placeholder)) (list this)]))))
 
 (defn emit-placeholders []
-  (let [placeholders (map (comp map->Placeholder deref resolve) @placeholders)
-        empty-atom (atom [])]
+  (let [placeholders (map (comp map->Placeholder deref resolve) @placeholders)]
     (concat
-      (map #(map->Placeholder (assoc % :media-queries empty-atom)) placeholders)
-      (map #(map->Placeholder (assoc % :selectors empty-atom)) placeholders))))
+      (map #(map->Placeholder (assoc % :media-queries (atom (ordered-map)))) placeholders)
+      (map #(map->Placeholder (assoc % :selectors (atom (ordered-set)))) placeholders))))
 
 (defmacro defplaceholder [name & rules]
-  `(do
-     (swap! placeholders conj '~(symbol (str (ns-name *ns*)) (str name)))
-     (def ~(symbol name)
-       (map->Placeholder
-         {:media-queries (atom (ordered-map))
-          :selectors (atom (ordered-set))
-          :rules (list ~@rules)}))))
+  `(let [sym# '~(symbol (str (ns-name *ns*)) (str name))
+         existing# (some-> sym# resolve deref)
+         rules# (list ~@rules)
+         existing-rules# (:rules existing#)]
+     (swap! placeholders conj sym#)
+     (when-not (= rules# existing-rules#)
+       (def ~(symbol name)
+         (map->Placeholder
+           {:media-queries (atom (ordered-map))
+            :selectors (atom (ordered-set))
+            :rules (list ~@rules)})))))

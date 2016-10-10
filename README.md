@@ -63,6 +63,10 @@ something-else some-child.including {
 }
 ```
 
+### Changes
+
+- 0.1.1 - Fixed an issue where saving certain files while running `lein garden auto` corrupted subsequent compilations.
+
 ### License
 
 Copyright (c) 2015, ReUp Distribution Inc
