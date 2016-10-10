@@ -35,7 +35,19 @@
   {:color :red}
   [:.warning {:color :yellow}])
 
+(defn reset-placeholder! [sym]
+  (if-let [placeholder @(resolve sym)]
+    (doseq [field [:media-queries :selectors]
+            :let [field-atom (field placeholder)]]
+      (swap! field-atom empty))
+    (swap! placeholders disj sym)))
+
+(defn reset-placeholders! []
+  (doall (map reset-placeholder! @placeholders)))
+
 (describe "Placeholder style rules"
+  (before (reset-placeholders!))
+
   (it "includes supplied rules for each selector referencing the placeholder"
     (let [styles (list
                    bold
