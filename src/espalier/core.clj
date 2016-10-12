@@ -43,12 +43,27 @@
     (when-not @(resolve sym)
       (swap! placeholders disj sym))))
 
+(defonce tracked-placeholders (atom #{}))
+
+(defn reset-placeholder!
+  "On first expansion of a placeholder, resets its media-queries and selectors
+  contexts so that they are recompiled from scratch (to support recompilation with
+  `lein garden auto`)."
+  [sym]
+  (when-not (@tracked-placeholders sym)
+    (let [placeholder (-> sym resolve deref)]
+      (reset! (:media-queries placeholder) (ordered-map))
+      (reset! (:selectors placeholder) (ordered-set))
+      (swap! tracked-placeholders conj sym))))
+
 ;; Modify expand-stylesheet to:
 ;; - purges removed placeholders (this would occur in `lein garden auto`)
+;; - resets placeholders tracked during expansion (again `lein garden auto`)
 ;; - prevent laziness so that all selector contexts are extended before
 ;;   placeholders are rendered
 (defn expand-stylesheet-wrapper [expand-stylesheet xs]
   (purge-removed-placeholders!)
+  (swap! tracked-placeholders empty)
   (doall (expand-stylesheet xs)))
 
 (wrap-fn #'garden.compiler/expand-stylesheet #'expand-stylesheet-wrapper)
@@ -91,7 +106,7 @@
   [rules]
   (expand [:& rules]))
 
-(defrecord Placeholder [media-queries selectors rules]
+(defrecord Placeholder [sym media-queries selectors rules]
   CSSRenderer
   (render-css [this]
     (->> [(render-selectors this) (render-media-queries this)]
@@ -105,6 +120,7 @@
   (expand [this]
     (if-let [selector-context @#'garden.compiler/*selector-context*]
       (let [selectors* (map @#'garden.compiler/space-separated-list selector-context)]
+        (reset-placeholder! sym)
         (expand-nested-placeholders! rules)
         (if-let [media-query @#'garden.compiler/*media-query-context*]
           (if-let [existing-query (@media-queries media-query)]
@@ -129,6 +145,7 @@
      (when-not (= rules# existing-rules#)
        (def ~(symbol name)
          (map->Placeholder
-           {:media-queries (atom (ordered-map))
+           {:sym sym#
+            :media-queries (atom (ordered-map))
             :selectors (atom (ordered-set))
             :rules (list ~@rules)})))))
