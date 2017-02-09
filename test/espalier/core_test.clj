@@ -35,7 +35,7 @@
   {:color :red}
   [:.warning {:color :yellow}])
 
-(defn reset-placeholder! [sym]
+(defn reset-placeholder!* [sym]
   (if-let [placeholder @(resolve sym)]
     (doseq [field [:media-queries :selectors]
             :let [field-atom (field placeholder)]]
@@ -43,7 +43,7 @@
     (swap! placeholders disj sym)))
 
 (defn reset-placeholders! []
-  (doall (map reset-placeholder! @placeholders)))
+  (doall (map reset-placeholder!* @placeholders)))
 
 (describe "Placeholder style rules"
   (before (reset-placeholders!))
