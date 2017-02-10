@@ -35,6 +35,9 @@
   {:color :red}
   [:.warning {:color :yellow}])
 
+(defplaceholder embiggenable
+  [:&.embiggen {:font-size "1.75rem"}])
+
 (defn reset-placeholder!* [sym]
   (if-let [placeholder @(resolve sym)]
     (doseq [field [:media-queries :selectors]
@@ -123,4 +126,14 @@
                      [:.notice affects-children]))]
       (should=
         "@media only screen{.notice{color:red}.notice .warning{color:yellow}}"
+        (css flags styles))))
+
+  (it "resolves & selectors in placeholders"
+    (let [styles (list
+                   (emit-placeholders)
+                   ["input[type=text]"
+                    "input:not([type])"
+                    embiggenable])]
+      (should=
+        "input[type=text].embiggen,input:not([type]).embiggen{font-size:1.75rem}"
         (css flags styles)))))
