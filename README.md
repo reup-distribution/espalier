@@ -65,7 +65,9 @@ something-else some-child.including {
 
 ### Changes
 
-- 0.1.1 - Fixed an issue where saving certain files while running `lein garden auto` corrupted subsequent compilations.
+- 0.1.1
+  - Fixes an issue where a placeholder using an `&` selector would only be applied to the last in a series of string selectors.
+  - Fixed an issue where saving certain files while running `lein garden auto` corrupted subsequent compilations.
 
 ### License
 
